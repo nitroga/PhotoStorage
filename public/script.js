@@ -1,4 +1,7 @@
-window.addEventListener('load', loadPhotos);
+window.addEventListener('load', () => {
+    loadFolders();
+    loadPhotos();
+});
 
 let currentImageIndex = 0;
 let allPhotos = [];
@@ -7,8 +10,55 @@ let touchEndX = 0;
 let isSelectMode = false;
 let selectedPhotos = new Set();
 
+const folderSelect = document.getElementById('folderSelect');
+const newFolderBtn = document.getElementById('newFolderBtn');
+const uploadForm = document.getElementById('uploadForm');
+const uploadFolderSelect = document.getElementById('uploadFolderSelect');
+
+async function loadFolders() {
+    const res = await fetch('/folders');
+    const folders = await res.json();
+
+    folderSelect.innerHTML = '<option value="">Root Folder</option>';
+    const uploadSelect = document.getElementById('uploadFolderSelect');
+    uploadSelect.innerHTML = '<option value="">Root Folder</option>';
+
+    folders.forEach(folder => {
+        const option1 = document.createElement('option');
+        option1.value = folder;
+        option1.textContent = folder;
+        folderSelect.appendChild(option1);
+
+        const option2 = option1.cloneNode(true);
+        uploadSelect.appendChild(option2);
+    });
+}
+
+newFolderBtn.addEventListener('click', async () => {
+    const name = prompt('Enter new folder name:');
+    if (!name) return;
+    const res = await fetch('/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    });
+    if (res.ok) {
+        await loadFolders();
+        folderSelect.value = name;
+    } else {
+        alert(await res.text());
+    }
+});
+
+uploadForm.addEventListener('submit', function (e) {
+    const selectedFolder = uploadFolderSelect.value || '';
+    const safeFolder = encodeURIComponent(selectedFolder);
+    this.action = `/upload/${safeFolder}`;
+});
+
 function loadPhotos() {
-    fetch('/photos')
+    const selectedFolder = folderSelect.value || '';
+    fetch(`/photos?folder=${encodeURIComponent(selectedFolder)}`)
         .then(response => response.json())
         .then(photos => {
             allPhotos = photos;
@@ -26,15 +76,14 @@ function loadPhotos() {
                 }
                 
                 const img = document.createElement('img');
-                img.src = `/storage/${photo}`;
+                img.src = `/storage/${selectedFolder ? `${selectedFolder}/` : ''}${photo}`;
                 img.alt = photo;
-                
-                // Handle click events based on mode
+
                 div.onclick = (e) => {
                     if (isSelectMode) {
                         togglePhotoSelection(div, photo);
                     } else {
-                        showFullscreen(`/storage/${photo}`, index);
+                        showFullscreen(img.src, index);
                     }
                 };
                 
@@ -45,7 +94,6 @@ function loadPhotos() {
         .catch(error => console.error('Error:', error));
 }
 
-// Update toggleSelectMode to enable/disable selection mode properly
 function toggleSelectMode() {
     isSelectMode = !isSelectMode;
     selectedPhotos.clear();
@@ -83,13 +131,16 @@ function togglePhotoSelection(element, photo) {
 
 function deleteSelectedPhotos() {
     if (selectedPhotos.size === 0) return;
-    
+
+    const selectedFolder = folderSelect.value || '';
+
     if (confirm(`Are you sure you want to delete ${selectedPhotos.size} photos?`)) {
         const deletePromises = Array.from(selectedPhotos).map(photo =>
-            fetch(`/photos/${photo}`, { method: 'DELETE' })
-                .then(response => response.json())
+            fetch(`/photos/${photo}?folder=${encodeURIComponent(selectedFolder)}`, {
+                method: 'DELETE'
+            }).then(response => response.json())
         );
-        
+
         Promise.all(deletePromises)
             .then(() => {
                 selectedPhotos.clear();
@@ -177,6 +228,8 @@ document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeFullscreen();
     }
 });
+
+folderSelect.addEventListener('change', loadPhotos);
 
 // Add these event listeners at the bottom of your file
 document.getElementById('selectModeBtn').addEventListener('click', toggleSelectMode);
