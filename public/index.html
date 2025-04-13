@@ -1,44 +1,59 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Photo Share</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-    <div class="upload-form">
-        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-            <select name="folder" id="uploadFolderSelect">
+    <!-- <button class="sidebar-toggle" id="sidebarToggle">☰</button> -->
+    <div class="sidebar open" id="sidebar">
+        <div class="upload-form">
+            <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <label for="uploadFolderSelect">Upload to folder:</label>
+                <select name="folder" id="uploadFolderSelect">
+                    <option value="">Root Folder</option>
+                </select>
+                <input type="file" name="photos" accept="image/*" multiple required />
+                <button type="submit">Upload Photos</button>
+            </form>
+        </div>
+
+        <div class="folder-controls">
+            <label for="folderSelect">Manage folders:</label>
+            <select id="folderSelect">
                 <option value="">Root Folder</option>
             </select>
-            <input type="file" name="photos" accept="image/*" multiple required />
-            <br>
-            <button type="submit">Upload Photos</button>
-        </form>
+            <button id="newFolderBtn">New Folder</button>
+        </div>
+
+        <div class="controls">
+            <button id="selectModeBtn">Select Photos</button>
+            <button id="deleteSelectedBtn" style="display: none; background: #dc3545">
+                Delete Selected
+            </button>
+            <button id="cancelSelectBtn" style="display: none">Cancel</button>
+        </div>
     </div>
 
-    <div class="folder-controls">
-        <select id="folderSelect">
-            <option value="">Root Folder</option>
-        </select>
-        <button id="newFolderBtn">New Folder</button>
-    </div>
-
-    <div class="controls">
-        <button id="selectModeBtn">Select Photos</button>
-        <button id="deleteSelectedBtn" style="display: none; background: #dc3545;">Delete Selected</button>
-        <button id="cancelSelectBtn" style="display: none;">Cancel</button>
-    </div>
-    
-    <div class="gallery" id="photoGallery"></div>
+    <main class="content">
+        <div class="gallery" id="photoGallery"></div>
+    </main>
 
     <div class="fullscreen-overlay" id="fullscreenOverlay">
         <button class="close-button" onclick="closeFullscreen()">×</button>
-        <button class="navigation-button prev-button" onclick="showPrevImage()">‹</button>
-        <button class="navigation-button next-button" onclick="showNextImage()">›</button>
-        <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
+        <button class="navigation-button prev-button" onclick="showPrevImage()">
+            ‹
+        </button>
+        <button class="navigation-button next-button" onclick="showNextImage()">
+            ›
+        </button>
+        <img class="fullscreen-image" id="fullscreenImage" src="" alt="" />
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
