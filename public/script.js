@@ -12,6 +12,7 @@ let selectedPhotos = new Set();
 
 const folderSelect = document.getElementById("folderSelect");
 const newFolderBtn = document.getElementById("newFolderBtn");
+const deleteFolderBtn = document.getElementById("deleteFolderBtn");
 const uploadForm = document.getElementById("uploadForm");
 const uploadFolderSelect = document.getElementById("uploadFolderSelect");
 const sidebar = document.getElementById("sidebar");
@@ -48,6 +49,24 @@ newFolderBtn.addEventListener("click", async () => {
   if (res.ok) {
     await loadFolders();
     folderSelect.value = name;
+  } else {
+    alert(await res.text());
+  }
+});
+
+deleteFolderBtn.addEventListener("click", async () => {
+  const name = folderSelect.value;
+  if (!name) return alert("No folder selected.");
+  const confirmDelete = confirm(`Are you sure you want to delete the folder "${name}" and all its photos?`);
+  if (!confirmDelete) return;
+
+  const res = await fetch(`/folders/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
+
+  if (res.ok) {
+    await loadFolders();
+    alert("Folder deleted.");
   } else {
     alert(await res.text());
   }

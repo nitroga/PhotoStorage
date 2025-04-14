@@ -126,6 +126,24 @@ app.post('/folders', (req, res) => {
     res.status(201).send('Folder created');
 });
 
+app.delete('/folders/:name', (req, res) => {
+    const folderName = req.params.name;
+    if (!folderName || folderName.includes('..') || folderName.includes('/')) {
+        return res.status(400).send('Invalid folder name');
+    }
+    const folderPath = path.join(uploadDir, folderName);
+    if (!fs.existsSync(folderPath)) {
+        return res.status(404).send('Folder does not exist');
+    }
+    fs.rm(folderPath, { recursive: true, force: true }, (err) => {
+        if (err) {
+            console.error("Error deleting folder:", err);
+            return res.status(500).send('Failed to delete folder');
+        }
+        res.status(200).send('Folder deleted');
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Upload directory: ${uploadDir}`);
