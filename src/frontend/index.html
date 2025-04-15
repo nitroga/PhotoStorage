@@ -28,6 +28,30 @@
         </div>
     </div>
 
+    <div id="newFolderModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Create New Folder</h3>
+            <input type="text" id="newFolderInput" placeholder="Enter folder name"
+                style="background: none; border: none; border-bottom: 1px solid white; font-size: 20px;" />
+            <div class="modal-actions">
+                <button id="createFolderConfirm">Create</button>
+                <button id="createFolderCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content">
+            <p id="confirmText"></p>
+            <div class="modal-actions">
+                <button id="confirmYes">Yes</button>
+                <button id="confirmNo">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
     <main class="content">
         <div class="controls">
             <div class="controls-left">

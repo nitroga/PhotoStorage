@@ -18,6 +18,46 @@ const uploadFolderSelect = document.getElementById("uploadFolderSelect");
 const sidebar = document.getElementById("sidebar");
 const toggleBtn = document.getElementById("sidebarToggle");
 const closeBtn = document.getElementById("closeSidebar");
+const newFolderModal = document.getElementById("newFolderModal");
+const newFolderInput = document.getElementById("newFolderInput");
+const createFolderConfirm = document.getElementById("createFolderConfirm");
+const createFolderCancel = document.getElementById("createFolderCancel");
+
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    document.getElementById("confirmText").textContent = message;
+    confirmModal.classList.remove("hidden");
+
+    const yes = () => {
+      cleanup();
+      resolve(true);
+    };
+    const no = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      confirmYes.removeEventListener("click", yes);
+      confirmNo.removeEventListener("click", no);
+      confirmModal.classList.add("hidden");
+    };
+
+    confirmYes.addEventListener("click", yes);
+    confirmNo.addEventListener("click", no);
+  });
+}
+
+function showToast(message, type = "success", duration = 3000) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, duration);
+}
 
 async function loadFolders() {
   const res = await fetch("/folders");
@@ -38,28 +78,42 @@ async function loadFolders() {
   });
 }
 
-newFolderBtn.addEventListener("click", async () => {
-  const name = prompt("Enter new folder name:");
+newFolderBtn.addEventListener("click", () => {
+  newFolderInput.value = "";
+  newFolderModal.classList.remove("hidden");
+});
+
+createFolderCancel.addEventListener("click", () => {
+  newFolderModal.classList.add("hidden");
+});
+
+createFolderConfirm.addEventListener("click", async () => {
+  const name = newFolderInput.value.trim();
   if (!name) return;
+
   const res = await fetch("/folders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
   });
+
   if (res.ok) {
     await loadFolders();
     folderSelect.value = name;
     await loadPhotos();
+    newFolderModal.classList.add("hidden");
   } else {
-    alert(await res.text());
+    showToast(await res.text(), "error");
   }
 });
 
 deleteFolderBtn.addEventListener("click", async () => {
   const name = folderSelect.value;
-  if (!name) return alert("No folder selected.");
-  const confirmDelete = confirm(`Are you sure you want to delete the folder "${name}" and all its photos?`);
-  if (!confirmDelete) return;
+  if (!name) {
+    showToast("No folder selected or trying to delete root folder", "error");
+    return;
+  }
+  if (!(await showConfirm(`Delete folder "${name}" and all its photos?`))) return;
 
   const res = await fetch(`/folders/${encodeURIComponent(name)}`, {
     method: "DELETE",
@@ -67,9 +121,9 @@ deleteFolderBtn.addEventListener("click", async () => {
 
   if (res.ok) {
     await loadFolders();
-    alert("Folder deleted.");
+    showToast("Folder deleted.", "success");
   } else {
-    alert(await res.text());
+    showToast(await res.text(), "error");
   }
 });
 
@@ -152,28 +206,30 @@ function togglePhotoSelection(element, photo) {
   deleteBtn.disabled = selectedPhotos.size === 0;
 }
 
-function deleteSelectedPhotos() {
+async function deleteSelectedPhotos() {
   if (selectedPhotos.size === 0) return;
 
   const selectedFolder = folderSelect.value || "";
 
-  if (
-    confirm(`Are you sure you want to delete ${selectedPhotos.size} photos?`)
-  ) {
-    const deletePromises = Array.from(selectedPhotos).map((photo) =>
-      fetch(`/photos/${photo}?folder=${encodeURIComponent(selectedFolder)}`, {
-        method: "DELETE",
-      }).then((response) => response.json())
-    );
+  const confirmed = await showConfirm(
+    `Are you sure you want to delete ${selectedPhotos.size} photo${selectedPhotos.size > 1 ? "s" : ""}?`
+  );
 
-    Promise.all(deletePromises)
-      .then(() => {
-        selectedPhotos.clear();
-        toggleSelectMode();
-        loadPhotos();
-      })
-      .catch((error) => console.error("Error deleting photos:", error));
-  }
+  if (!confirmed) return;
+
+  const deletePromises = Array.from(selectedPhotos).map((photo) =>
+    fetch(`/photos/${photo}?folder=${encodeURIComponent(selectedFolder)}`, {
+      method: "DELETE",
+    }).then((response) => response.json())
+  );
+
+  Promise.all(deletePromises)
+    .then(() => {
+      selectedPhotos.clear();
+      toggleSelectMode();
+      loadPhotos();
+    })
+    .catch((error) => console.error("Error deleting photos:", error));
 }
 
 function showFullscreen(imageSrc, index) {
