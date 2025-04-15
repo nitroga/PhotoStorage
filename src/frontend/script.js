@@ -99,8 +99,7 @@ async function loadPhotos() {
         }
 
         const img = document.createElement("img");
-        img.src = `/storage/${selectedFolder ? `${selectedFolder}/` : ""
-          }${photo}`;
+        img.src = `/storage${selectedFolder ? `/${selectedFolder}` : ""}/${photo}`;
         img.alt = photo;
 
         div.onclick = (e) => {
