@@ -1,9 +1,9 @@
 {
   "name": "photoshare",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/backend/index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/backend/index.js"
   },
   "keywords": [],
   "author": "",

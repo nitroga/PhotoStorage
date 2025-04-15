@@ -5,8 +5,7 @@ const fs = require('fs');
 const app = express();
 const PORT = 3000;
 
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, 'storage');
+const uploadDir = path.join(__dirname, '../../storage');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
@@ -14,7 +13,7 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const folderName = req.params.folderName || '';
-        const dest = path.join(__dirname, 'storage', folderName);
+        const dest = path.join(uploadDir, folderName);
 
         fs.mkdirSync(dest, { recursive: true });
 
@@ -30,11 +29,15 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-app.use(express.static('public'));
-app.use('/storage', express.static('storage'));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use('/storage', express.static(path.join(__dirname, '..', '..', 'storage')));
 app.use(express.json());
 
-app.post('/upload', upload.array('photos', 10), (req, res) => {
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
+
+app.post('/upload', upload.any(), (req, res) => {
     const uploadPath = path.join(uploadDir, ''); // Root folder
 
     if (!fs.existsSync(uploadPath)) {
@@ -48,7 +51,7 @@ app.post('/upload', upload.array('photos', 10), (req, res) => {
     res.redirect('/');
 });
 
-app.post('/upload/:folderName', upload.array('photos', 10), (req, res) => {
+app.post('/upload/:folderName', upload.any(), (req, res) => {
     const folderName = req.params.folderName;
     const uploadPath = path.join(uploadDir, folderName);
 

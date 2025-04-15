@@ -49,6 +49,7 @@ newFolderBtn.addEventListener("click", async () => {
   if (res.ok) {
     await loadFolders();
     folderSelect.value = name;
+    await loadPhotos();
   } else {
     alert(await res.text());
   }
@@ -78,7 +79,7 @@ uploadForm.addEventListener("submit", function (e) {
   this.action = `/upload/${safeFolder}`;
 });
 
-function loadPhotos() {
+async function loadPhotos() {
   const selectedFolder = folderSelect.value || "";
   fetch(`/photos?folder=${encodeURIComponent(selectedFolder)}`)
     .then((response) => response.json())
@@ -128,7 +129,7 @@ function toggleSelectMode() {
   if (isSelectMode) {
     selectBtn.style.display = "none";
     deleteBtn.style.display = "inline-block";
-    deleteBtn.disabled = true; // Disable delete button initially
+    deleteBtn.disabled = true;
     cancelBtn.style.display = "inline-block";
   } else {
     selectBtn.style.display = "inline-block";
@@ -136,7 +137,7 @@ function toggleSelectMode() {
     cancelBtn.style.display = "none";
   }
 
-  loadPhotos(); // Refresh the gallery with new interaction mode
+  loadPhotos();
 }
 
 function togglePhotoSelection(element, photo) {
